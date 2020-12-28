@@ -34,9 +34,9 @@ import (
 
 func main() {
 	name := "file"
-	tname := name + tar.TargzSuffix
+	targz := "file.tar.gz"
 	defer os.Remove(name)
-	defer os.Remove(tname)
+	defer os.Remove(targz)
 	file, err := os.Create(name)
 	if err != nil {
 		panic(err)
@@ -44,9 +44,9 @@ func main() {
 	contexts := "Hello World"
 	file.Write([]byte(contexts))
 	file.Close()
-	tar.Targz(tname, name)
+	tar.Targz(targz, name)
 	os.Remove(name)
-	tar.Untargz(tname)
+	tar.Untargz(targz)
 	f, err := os.Open(name)
 	if err != nil {
 		panic(err)
