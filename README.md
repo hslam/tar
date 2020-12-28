@@ -1,4 +1,9 @@
 # tar
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/hslam/tar)](https://pkg.go.dev/github.com/hslam/tar)
+[![Build Status](https://github.com/hslam/tar/workflows/build/badge.svg)](https://github.com/hslam/tar/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/hslam/tar)](https://goreportcard.com/report/github.com/hslam/tar)
+[![LICENSE](https://img.shields.io/github/license/hslam/tar.svg?style=flat-square)](https://github.com/hslam/tar/blob/master/LICENSE)
+
 Package tar implements access to tar archives.
 
 ## Feature
