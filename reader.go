@@ -100,10 +100,7 @@ func (t *Reader) NextFile(dir ...string) error {
 	}
 	defer f.Close()
 	_, err = io.Copy(f, t)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Close closes the file.

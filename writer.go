@@ -86,7 +86,7 @@ func (w *Writer) Tar(paths ...string) error {
 
 // TarDir tars the dir.
 func (w *Writer) TarDir(dir string) error {
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,6 @@ func (w *Writer) TarDir(dir string) error {
 		}
 		return w.tarFile(path, info)
 	})
-	return nil
 }
 
 // TarFile writes a file to the tar file.
