@@ -72,9 +72,14 @@ func (w *Writer) Tar(paths ...string) error {
 			return err
 		}
 		if info.IsDir() {
-			return w.TarDir(name)
+			if err := w.TarDir(name); err != nil {
+				return err
+			}
+			continue
 		}
-		return w.tarFile(name, info)
+		if err := w.tarFile(name, info); err != nil {
+			return err
+		}
 	}
 	return nil
 }
