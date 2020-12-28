@@ -153,6 +153,7 @@ func TestTarDir(t *testing.T) {
 		t.Error(err)
 	}
 	name := dir + "/" + "file"
+	name1 := dir + "/" + "file1"
 	tname := "file" + TarSuffix
 	defer os.RemoveAll(dir)
 	defer os.Remove(tname)
@@ -163,6 +164,12 @@ func TestTarDir(t *testing.T) {
 	contexts := "Hello World"
 	file.Write([]byte(contexts))
 	file.Close()
+	file1, err := os.Create(name1)
+	if err != nil {
+		t.Error(err)
+	}
+	file1.Write([]byte(contexts))
+	file1.Close()
 	w, err := os.Create(tname)
 	if err != nil {
 		t.Error(err)
@@ -172,8 +179,7 @@ func TestTarDir(t *testing.T) {
 	tw.Flush()
 	tw.Close()
 	w.Close()
-	os.Remove(name)
-
+	os.RemoveAll(dir)
 	r, err := os.Open(tname)
 	if err != nil {
 		t.Error(err)
@@ -189,6 +195,81 @@ func TestTarDir(t *testing.T) {
 	}
 	buf := make([]byte, len(contexts))
 	f.Read(buf)
+	if string(buf) != contexts {
+		t.Error(string(buf), contexts)
+	}
+
+	f1, err := os.Open(name)
+	if err != nil {
+		panic(err)
+	}
+	buf = make([]byte, len(contexts))
+	f1.Read(buf)
+	if string(buf) != contexts {
+		t.Error(string(buf), contexts)
+	}
+}
+
+func TestTarPaths(t *testing.T) {
+	dir := "dir"
+	err := checkDir(dir)
+	if err != nil {
+		t.Error(err)
+	}
+	name := dir + "/" + "file"
+	name1 := "file1"
+	tname := "file" + TarSuffix
+	defer os.RemoveAll(dir)
+	defer os.Remove(tname)
+	file, err := os.Create(name)
+	if err != nil {
+		t.Error(err)
+	}
+	contexts := "Hello World"
+	file.Write([]byte(contexts))
+	file.Close()
+	file1, err := os.Create(name1)
+	if err != nil {
+		t.Error(err)
+	}
+	file1.Write([]byte(contexts))
+	file1.Close()
+	w, err := os.Create(tname)
+	if err != nil {
+		t.Error(err)
+	}
+	tw := NewWriter(w)
+	tw.Tar(dir, name1)
+	tw.Flush()
+	tw.Close()
+	w.Close()
+	os.RemoveAll(dir)
+	os.Remove(name1)
+	r, err := os.Open(tname)
+	if err != nil {
+		t.Error(err)
+	}
+	tr := NewReader(r)
+	tr.NextFile()
+	tr.Close()
+	r.Close()
+
+	f, err := os.Open(name)
+	if err != nil {
+		panic(err)
+	}
+	buf := make([]byte, len(contexts))
+	f.Read(buf)
+	if string(buf) != contexts {
+		t.Error(string(buf), contexts)
+	}
+
+	f1, err := os.Open(name)
+	if err != nil {
+		panic(err)
+	}
+	buf = make([]byte, len(contexts))
+	f1.Read(buf)
 	if string(buf) != contexts {
 		t.Error(string(buf), contexts)
 	}
