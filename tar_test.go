@@ -185,7 +185,7 @@ func TestTarDir(t *testing.T) {
 		t.Error(err)
 	}
 	tr := NewReader(r)
-	tr.NextFile()
+	tr.Untar()
 	tr.Close()
 	r.Close()
 
@@ -220,6 +220,7 @@ func TestTarPaths(t *testing.T) {
 	name1 := "file1"
 	tname := "file" + TarSuffix
 	defer os.RemoveAll(dir)
+	defer os.Remove(name1)
 	defer os.Remove(tname)
 	file, err := os.Create(name)
 	if err != nil {
@@ -250,7 +251,7 @@ func TestTarPaths(t *testing.T) {
 		t.Error(err)
 	}
 	tr := NewReader(r)
-	tr.NextFile()
+	tr.Untar()
 	tr.Close()
 	r.Close()
 
