@@ -88,6 +88,9 @@ func (t *Reader) NextFile(dir ...string) error {
 	if err := checkDir(filedir); err != nil {
 		return err
 	}
+	if header.FileInfo().IsDir() {
+		return os.Mkdir(path, 0744)
+	}
 	f, err := os.Create(path)
 	if err != nil {
 		return err
