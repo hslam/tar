@@ -87,8 +87,11 @@ func (w *Writer) Tar(paths ...string) error {
 // TarDir tars the dir.
 func (w *Writer) TarDir(dir string) error {
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() || err != nil {
-			return nil
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return w.tarDir(path, info)
 		}
 		return w.tarFile(path, info)
 	})
@@ -102,6 +105,15 @@ func (w *Writer) TarFile(name string) error {
 		return err
 	}
 	return w.tarFile(name, info)
+}
+
+func (w *Writer) tarDir(path string, info os.FileInfo) error {
+	hdr, err := tar.FileInfoHeader(info, "")
+	if err != nil {
+		return err
+	}
+	hdr.Name = path
+	return w.WriteHeader(hdr)
 }
 
 func (w *Writer) tarFile(path string, info os.FileInfo) error {
