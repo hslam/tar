@@ -17,8 +17,8 @@ func TestTar(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	Tar(tname, name)
 	os.Remove(name)
@@ -27,10 +27,10 @@ func TestTar(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 }
 
@@ -43,8 +43,8 @@ func TestTargz(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	Targz(tname, name)
 	os.Remove(name)
@@ -53,10 +53,10 @@ func TestTargz(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 }
 
@@ -69,8 +69,8 @@ func TestReadWriter(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	w, err := os.Create(tname)
 	if err != nil {
@@ -96,10 +96,10 @@ func TestReadWriter(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 }
 
@@ -112,8 +112,8 @@ func TestGzipReadWriter(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	w, err := os.Create(tname)
 	if err != nil {
@@ -139,11 +139,62 @@ func TestGzipReadWriter(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
+}
+
+func TestTarBytes(t *testing.T) {
+	name := "file"
+	name1 := "file1"
+	tname := "file.tar"
+	defer os.Remove(tname)
+	contents := "Hello World"
+	contents1 := "Hello World1"
+
+	w, err := os.Create(tname)
+	if err != nil {
+		t.Error(err)
+	}
+	tw := NewWriter(w)
+	tw.TarBytes(name, []byte(contents))
+	tw.TarBytes(name1, []byte(contents1))
+	tw.Flush()
+	tw.Close()
+	w.Close()
+	r, err := os.Open(tname)
+	if err != nil {
+		t.Error(err)
+	}
+	tr := NewReader(r)
+	n, data, err := tr.NextFileBytes()
+	if err != nil {
+		t.Error(err)
+	}
+	if n != name {
+		t.Error(n, name)
+	}
+	if string(data) != contents {
+		t.Error(string(data), contents)
+	}
+	n1, data1, err := tr.NextFileBytes()
+	if err != nil {
+		t.Error(err)
+	}
+	if n1 != name1 {
+		t.Error(n1, name1)
+	}
+	if string(data1) != contents1 {
+		t.Error(string(data1), contents1)
+	}
+	_, _, err = tr.NextFileBytes()
+	if err == nil {
+		t.Error()
+	}
+	tr.Close()
+	r.Close()
 }
 
 func TestTarDir(t *testing.T) {
@@ -161,14 +212,14 @@ func TestTarDir(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	file1, err := os.Create(name1)
 	if err != nil {
 		t.Error(err)
 	}
-	file1.Write([]byte(contexts))
+	file1.Write([]byte(contents))
 	file1.Close()
 	w, err := os.Create(tname)
 	if err != nil {
@@ -193,20 +244,20 @@ func TestTarDir(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 
 	f1, err := os.Open(name)
 	if err != nil {
 		panic(err)
 	}
-	buf = make([]byte, len(contexts))
+	buf = make([]byte, len(contents))
 	f1.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 }
 
@@ -226,14 +277,14 @@ func TestTarPaths(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	file1, err := os.Create(name1)
 	if err != nil {
 		t.Error(err)
 	}
-	file1.Write([]byte(contexts))
+	file1.Write([]byte(contents))
 	file1.Close()
 	w, err := os.Create(tname)
 	if err != nil {
@@ -259,19 +310,19 @@ func TestTarPaths(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 
 	f1, err := os.Open(name)
 	if err != nil {
 		panic(err)
 	}
-	buf = make([]byte, len(contexts))
+	buf = make([]byte, len(contents))
 	f1.Read(buf)
-	if string(buf) != contexts {
-		t.Error(string(buf), contexts)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
 	}
 }

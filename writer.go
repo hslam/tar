@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // Writer provides sequential writing of a tar archive.
@@ -84,7 +85,7 @@ func (w *Writer) Tar(paths ...string) error {
 	return nil
 }
 
-// TarDir tars the dir.
+// TarDir tars a dir to the tar file.
 func (w *Writer) TarDir(dir string) error {
 	var base = filepath.Base(dir)
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -139,6 +140,22 @@ func (w *Writer) tarFile(path, name string, info os.FileInfo) error {
 		return err
 	}
 	_, err = io.Copy(w, f)
+	return err
+}
+
+// TarDir tars a file with the file name and data.
+func (w *Writer) TarBytes(name string, data []byte) error {
+	hdr := &tar.Header{
+		Name:    name,
+		Size:    int64(len(data)),
+		Mode:    0666,
+		ModTime: time.Now(),
+	}
+	err := w.WriteHeader(hdr)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(data)
 	return err
 }
 

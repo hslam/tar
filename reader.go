@@ -8,6 +8,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -101,6 +102,21 @@ func (t *Reader) NextFile(dir ...string) error {
 	defer f.Close()
 	_, err = io.Copy(f, t)
 	return err
+}
+
+// NextFileBytes advances to the next file bytes in the tar archive.
+func (t *Reader) NextFileBytes() (name string, data []byte, err error) {
+next:
+	header, err := t.Next()
+	if err != nil {
+		return "", nil, err
+	}
+	if header.FileInfo().IsDir() {
+		goto next
+	}
+	name = header.Name
+	data, err = ioutil.ReadAll(t)
+	return
 }
 
 // Close closes the file.
