@@ -169,7 +169,7 @@ func TestTarBytes(t *testing.T) {
 		t.Error(err)
 	}
 	tr := NewReader(r)
-	n, data, err := tr.NextFileBytes()
+	n, data, err := tr.NextBytes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -179,7 +179,7 @@ func TestTarBytes(t *testing.T) {
 	if string(data) != contents {
 		t.Error(string(data), contents)
 	}
-	n1, data1, err := tr.NextFileBytes()
+	n1, data1, err := tr.NextBytes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -189,7 +189,7 @@ func TestTarBytes(t *testing.T) {
 	if string(data1) != contents1 {
 		t.Error(string(data1), contents1)
 	}
-	_, _, err = tr.NextFileBytes()
+	_, _, err = tr.NextBytes()
 	if err == nil {
 		t.Error()
 	}

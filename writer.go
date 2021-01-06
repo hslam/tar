@@ -143,7 +143,7 @@ func (w *Writer) tarFile(path, name string, info os.FileInfo) error {
 	return err
 }
 
-// TarDir tars a file with the file name and data.
+// TarBytes tars a file with the file name and data.
 func (w *Writer) TarBytes(name string, data []byte) error {
 	hdr := &tar.Header{
 		Name:    name,

@@ -104,8 +104,8 @@ func (t *Reader) NextFile(dir ...string) error {
 	return err
 }
 
-// NextFileBytes advances to the next file bytes in the tar archive.
-func (t *Reader) NextFileBytes() (name string, data []byte, err error) {
+// NextBytes advances to the next file name and bytes in the tar archive.
+func (t *Reader) NextBytes() (name string, data []byte, err error) {
 next:
 	header, err := t.Next()
 	if err != nil {
