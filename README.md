@@ -41,8 +41,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	contexts := "Hello World"
-	file.Write([]byte(contexts))
+	contents := "Hello World"
+	file.Write([]byte(contents))
 	file.Close()
 	tar.Targz(targz, name)
 	os.Remove(name)
@@ -52,9 +52,41 @@ func main() {
 		panic(err)
 	}
 	defer f.Close()
-	buf := make([]byte, len(contexts))
+	buf := make([]byte, len(contents))
 	f.Read(buf)
 	fmt.Println(string(buf))
+}
+```
+
+#### Tar bytes example
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/hslam/tar"
+	"os"
+)
+
+func main() {
+	targz := "file.tar.gz"
+	defer os.Remove(targz)
+	tw, err := tar.NewGzipFileWriter(targz)
+	if err != nil {
+		panic(err)
+	}
+	tw.TarBytes("file", []byte("Hello World"))
+	tw.Flush()
+	tw.Close()
+	tr, err := tar.NewGzipFileReader(targz)
+	if err != nil {
+		panic(err)
+	}
+	_, data, err := tr.NextBytes()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(data))
 }
 ```
 
