@@ -60,65 +60,70 @@ func NewGzipFileReader(name string) (*Reader, error) {
 }
 
 // Untar untars all the files to dir.
-func (t *Reader) Untar(dir ...string) (paths []string, err error) {
+func (t *Reader) Untar(dir ...string) (files, dirs []string, err error) {
 	var path string
+	var isDir bool
 	for {
-		path, err = t.NextFile(dir...)
+		path, isDir, err = t.NextFile(dir...)
 		if err != nil {
 			if err != io.EOF {
 				return
 			}
-			return paths, nil
+			return files, dirs, nil
 		}
 		if len(path) > 0 {
-			paths = append(paths, path)
+			if isDir {
+				dirs = append(dirs, path)
+			} else {
+				files = append(files, path)
+			}
 		}
 	}
 }
 
 // NextFile advances to the next file in the tar archive.
-func (t *Reader) NextFile(dir ...string) (string, error) {
+func (t *Reader) NextFile(dir ...string) (name string, isDir bool, err error) {
 	var dirpath string
 	if len(dir) > 1 {
-		return "", ErrTooManyArgs
+		return "", false, ErrTooManyArgs
 	} else if len(dir) == 1 {
 		dirpath = dir[0]
 	}
 	header, err := t.Next()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	path := filepath.Join(dirpath, header.Name)
 	filedir, _ := filepath.Split(path)
 	if err := checkDir(filedir); err != nil {
-		return "", err
+		return "", false, err
 	}
 	if header.FileInfo().IsDir() {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return "", os.Mkdir(path, 0744)
+			return path, true, os.Mkdir(path, 0744)
 		}
-		return "", nil
+		return path, true, nil
 	}
 	f, err := os.Create(path)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	defer f.Close()
 	_, err = io.Copy(f, t)
-	return path, err
+	return path, false, err
 }
 
 // NextBytes advances to the next file name and bytes in the tar archive.
-func (t *Reader) NextBytes() (name string, data []byte, err error) {
-next:
+func (t *Reader) NextBytes() (name string, isDir bool, data []byte, err error) {
 	header, err := t.Next()
 	if err != nil {
-		return "", nil, err
-	}
-	if header.FileInfo().IsDir() {
-		goto next
+		return "", false, nil, err
 	}
 	name = header.Name
+	if header.FileInfo().IsDir() {
+		isDir = true
+		return
+	}
 	data, err = ioutil.ReadAll(t)
 	return
 }

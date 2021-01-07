@@ -153,33 +153,55 @@ func TestTarBytes(t *testing.T) {
 	defer os.Remove(tname)
 	contents := "Hello World"
 	contents1 := "Hello World1"
-
+	dir := "dir"
+	if err := checkDir(dir); err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dir)
 	w, err := os.Create(tname)
 	if err != nil {
 		t.Error(err)
 	}
 	tw := NewWriter(w)
 	tw.TarBytes(name, []byte(contents))
+	tw.TarDir(dir)
 	tw.TarBytes(name1, []byte(contents1))
 	tw.Flush()
 	tw.Close()
 	w.Close()
+	os.RemoveAll(dir)
 	r, err := os.Open(tname)
 	if err != nil {
 		t.Error(err)
 	}
 	tr := NewReader(r)
-	n, data, err := tr.NextBytes()
+	n, isDir, data, err := tr.NextBytes()
 	if err != nil {
 		t.Error(err)
 	}
 	if n != name {
 		t.Error(n, name)
 	}
+	if isDir {
+		t.Error()
+	}
 	if string(data) != contents {
 		t.Error(string(data), contents)
 	}
-	n1, data1, err := tr.NextBytes()
+	d, isDir, datad, err := tr.NextBytes()
+	if err != nil {
+		t.Error(err)
+	}
+	if d != dir {
+		t.Error(d, dir)
+	}
+	if !isDir {
+		t.Error()
+	}
+	if len(datad) != 0 {
+		t.Error()
+	}
+	n1, isDir, data1, err := tr.NextBytes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -189,7 +211,10 @@ func TestTarBytes(t *testing.T) {
 	if string(data1) != contents1 {
 		t.Error(string(data1), contents1)
 	}
-	_, _, err = tr.NextBytes()
+	if isDir {
+		t.Error()
+	}
+	_, _, _, err = tr.NextBytes()
 	if err == nil {
 		t.Error()
 	}
@@ -204,9 +229,18 @@ func TestTarBytesNextFile(t *testing.T) {
 	defer os.Remove(name)
 	defer os.Remove(name1)
 	defer os.Remove(tname)
+	dir := "dir"
+	if err := checkDir(dir); err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dir)
+	dir1 := "dir1"
+	if err := checkDir(dir1); err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dir1)
 	contents := "Hello World"
 	contents1 := "Hello World1"
-
 	w, err := os.Create(tname)
 	if err != nil {
 		t.Error(err)
@@ -214,20 +248,26 @@ func TestTarBytesNextFile(t *testing.T) {
 	tw := NewWriter(w)
 	tw.TarBytes(name, []byte(contents))
 	tw.TarBytes(name1, []byte(contents1))
+	tw.TarDir(dir)
+	tw.TarDir(dir1)
 	tw.Flush()
 	tw.Close()
 	w.Close()
+	os.RemoveAll(dir)
 	r, err := os.Open(tname)
 	if err != nil {
 		t.Error(err)
 	}
 	tr := NewReader(r)
-	n, err := tr.NextFile()
+	n, isDir, err := tr.NextFile()
 	if err != nil {
 		t.Error(err)
 	}
 	if n != name {
 		t.Error(n, name)
+	}
+	if isDir {
+		t.Error()
 	}
 	f, err := os.Open(name)
 	if err != nil {
@@ -239,12 +279,15 @@ func TestTarBytesNextFile(t *testing.T) {
 		t.Error(string(buf), contents)
 	}
 	f.Close()
-	n1, err := tr.NextFile()
+	n1, isDir, err := tr.NextFile()
 	if err != nil {
 		t.Error(err)
 	}
 	if n1 != name1 {
 		t.Error(n1, name1)
+	}
+	if isDir {
+		t.Error()
 	}
 	f1, err := os.Open(name1)
 	if err != nil {
@@ -256,6 +299,32 @@ func TestTarBytesNextFile(t *testing.T) {
 		t.Error(string(buf), contents1)
 	}
 	f1.Close()
+	d, isDir, err := tr.NextFile()
+	if err != nil {
+		t.Error(err)
+	}
+	if d != dir {
+		t.Error(d, dir)
+	}
+	if !isDir {
+		t.Error()
+	}
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	d1, isDir, err := tr.NextFile()
+	if err != nil {
+		t.Error(err)
+	}
+	if d1 != dir1 {
+		t.Error(d1, dir1)
+	}
+	if !isDir {
+		t.Error()
+	}
+	if _, err := os.Stat(dir1); os.IsNotExist(err) {
+		t.Error(err)
+	}
 	tr.Close()
 	r.Close()
 }

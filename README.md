@@ -82,7 +82,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	_, data, err := tr.NextBytes()
+	_, _, data, err := tr.NextBytes()
 	if err != nil {
 		panic(err)
 	}
