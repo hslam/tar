@@ -60,48 +60,52 @@ func NewGzipFileReader(name string) (*Reader, error) {
 }
 
 // Untar untars all the files to dir.
-func (t *Reader) Untar(dir ...string) error {
+func (t *Reader) Untar(dir ...string) (paths []string, err error) {
+	var path string
 	for {
-		err := t.NextFile(dir...)
+		path, err = t.NextFile(dir...)
 		if err != nil {
 			if err != io.EOF {
-				return err
+				return
 			}
-			return nil
+			return paths, nil
+		}
+		if len(path) > 0 {
+			paths = append(paths, path)
 		}
 	}
 }
 
 // NextFile advances to the next file in the tar archive.
-func (t *Reader) NextFile(dir ...string) error {
+func (t *Reader) NextFile(dir ...string) (string, error) {
 	var dirpath string
 	if len(dir) > 1 {
-		return ErrTooManyArgs
+		return "", ErrTooManyArgs
 	} else if len(dir) == 1 {
 		dirpath = dir[0]
 	}
 	header, err := t.Next()
 	if err != nil {
-		return err
+		return "", err
 	}
 	path := filepath.Join(dirpath, header.Name)
 	filedir, _ := filepath.Split(path)
 	if err := checkDir(filedir); err != nil {
-		return err
+		return "", err
 	}
 	if header.FileInfo().IsDir() {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return os.Mkdir(path, 0744)
+			return "", os.Mkdir(path, 0744)
 		}
-		return nil
+		return "", nil
 	}
 	f, err := os.Create(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer f.Close()
 	_, err = io.Copy(f, t)
-	return err
+	return path, err
 }
 
 // NextBytes advances to the next file name and bytes in the tar archive.

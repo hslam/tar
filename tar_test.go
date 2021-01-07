@@ -197,6 +197,69 @@ func TestTarBytes(t *testing.T) {
 	r.Close()
 }
 
+func TestTarBytesNextFile(t *testing.T) {
+	name := "file"
+	name1 := "file1"
+	tname := "file.tar"
+	defer os.Remove(name)
+	defer os.Remove(name1)
+	defer os.Remove(tname)
+	contents := "Hello World"
+	contents1 := "Hello World1"
+
+	w, err := os.Create(tname)
+	if err != nil {
+		t.Error(err)
+	}
+	tw := NewWriter(w)
+	tw.TarBytes(name, []byte(contents))
+	tw.TarBytes(name1, []byte(contents1))
+	tw.Flush()
+	tw.Close()
+	w.Close()
+	r, err := os.Open(tname)
+	if err != nil {
+		t.Error(err)
+	}
+	tr := NewReader(r)
+	n, err := tr.NextFile()
+	if err != nil {
+		t.Error(err)
+	}
+	if n != name {
+		t.Error(n, name)
+	}
+	f, err := os.Open(name)
+	if err != nil {
+		panic(err)
+	}
+	buf := make([]byte, len(contents))
+	f.Read(buf)
+	if string(buf) != contents {
+		t.Error(string(buf), contents)
+	}
+	f.Close()
+	n1, err := tr.NextFile()
+	if err != nil {
+		t.Error(err)
+	}
+	if n1 != name1 {
+		t.Error(n1, name1)
+	}
+	f1, err := os.Open(name1)
+	if err != nil {
+		panic(err)
+	}
+	buf = make([]byte, len(contents1))
+	f1.Read(buf)
+	if string(buf) != contents1 {
+		t.Error(string(buf), contents1)
+	}
+	f1.Close()
+	tr.Close()
+	r.Close()
+}
+
 func TestTarDir(t *testing.T) {
 	dir := "dir"
 	err := checkDir(dir)

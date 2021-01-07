@@ -21,7 +21,7 @@ func Tar(tar string, paths ...string) error {
 }
 
 // Untar untars all the files to dir.
-func Untar(tar string, dir ...string) error {
+func Untar(tar string, dir ...string) ([]string, error) {
 	tr, err := NewFileReader(tar)
 	if err != nil {
 		panic(err)
@@ -41,7 +41,7 @@ func Targz(targz string, paths ...string) error {
 }
 
 // Untargz untars all the files to dir.
-func Untargz(targz string, dir ...string) error {
+func Untargz(targz string, dir ...string) ([]string, error) {
 	tr, err := NewGzipFileReader(targz)
 	if err != nil {
 		panic(err)
