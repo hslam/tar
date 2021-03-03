@@ -29,12 +29,12 @@ func NewReader(r io.Reader) *Reader {
 }
 
 // NewGzipReader creates a new gzip Reader reading from r.
-func NewGzipReader(r io.Reader) *Reader {
+func NewGzipReader(r io.Reader) (*Reader, error) {
 	gr, err := gzip.NewReader(r)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &Reader{Reader: tar.NewReader(gr), gr: gr}
+	return &Reader{Reader: tar.NewReader(gr), gr: gr}, nil
 }
 
 // NewFileReader creates a new Reader reading from file.
@@ -47,16 +47,16 @@ func NewFileReader(name string) (*Reader, error) {
 }
 
 // NewGzipFileReader creates a new gzip Reader reading from file.
-func NewGzipFileReader(name string) (*Reader, error) {
+func NewGzipFileReader(name string) (r *Reader, err error) {
 	f, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
 	gr, err := gzip.NewReader(f)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		r = &Reader{Reader: tar.NewReader(gr), gr: gr, f: f}
 	}
-	return &Reader{Reader: tar.NewReader(gr), gr: gr, f: f}, nil
+	return r, err
 }
 
 // Untar untars all the files to dir.

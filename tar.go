@@ -24,7 +24,7 @@ func Tar(tar string, paths ...string) error {
 func Untar(tar string, dir ...string) ([]string, []string, error) {
 	tr, err := NewFileReader(tar)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 	defer tr.Close()
 	return tr.Untar(dir...)
@@ -44,7 +44,7 @@ func Targz(targz string, paths ...string) error {
 func Untargz(targz string, dir ...string) ([]string, []string, error) {
 	tr, err := NewGzipFileReader(targz)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 	defer tr.Close()
 	return tr.Untar(dir...)

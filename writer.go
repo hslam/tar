@@ -144,18 +144,17 @@ func (w *Writer) tarFile(path, name string, info os.FileInfo) error {
 }
 
 // TarBytes tars a file with the file name and data.
-func (w *Writer) TarBytes(name string, data []byte) error {
+func (w *Writer) TarBytes(name string, data []byte) (err error) {
 	hdr := &tar.Header{
 		Name:    name,
 		Size:    int64(len(data)),
 		Mode:    0666,
 		ModTime: time.Now(),
 	}
-	err := w.WriteHeader(hdr)
-	if err != nil {
-		return err
+	err = w.WriteHeader(hdr)
+	if err == nil {
+		_, err = w.Write(data)
 	}
-	_, err = w.Write(data)
 	return err
 }
 

@@ -20,7 +20,12 @@ func TestTar(t *testing.T) {
 	contents := "Hello World"
 	file.Write([]byte(contents))
 	file.Close()
-	Tar(tname, name)
+	if err := Tar(tname, ""); err == nil {
+		t.Error()
+	}
+	if err := Tar(tname, name); err != nil {
+		t.Error(err)
+	}
 	os.Remove(name)
 	Untar(tname)
 	f, err := os.Open(name)
@@ -80,6 +85,9 @@ func TestReadWriter(t *testing.T) {
 	tw.TarFile(name)
 	tw.Flush()
 	tw.Close()
+	if err := tw.Flush(); err == nil {
+		t.Error()
+	}
 	w.Close()
 	os.Remove(name)
 
@@ -120,6 +128,9 @@ func TestGzipReadWriter(t *testing.T) {
 		t.Error(err)
 	}
 	tw := NewGzipWriter(w)
+	if err := tw.TarFile(""); err == nil {
+		t.Error()
+	}
 	tw.TarFile(name)
 	tw.Flush()
 	tw.Close()
@@ -130,7 +141,13 @@ func TestGzipReadWriter(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tr := NewGzipReader(r)
+	if _, err := NewGzipReader(file); err == nil {
+		t.Error()
+	}
+	tr, err := NewGzipReader(r)
+	if err != nil {
+		t.Error(err)
+	}
 	tr.NextFile()
 	tr.Close()
 	r.Close()
@@ -456,5 +473,69 @@ func TestTarPaths(t *testing.T) {
 	f1.Read(buf)
 	if string(buf) != contents {
 		t.Error(string(buf), contents)
+	}
+}
+
+func TestNewFileWriter(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if _, err := NewFileWriter(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestNewGzipFileWriter(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if _, err := NewGzipFileWriter(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestNewFileReader(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if _, err := NewFileReader(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestNewGzipFileReader(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if _, err := NewGzipFileReader(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestTarMore(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if err := Tar(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestUntarMore(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if _, _, err := Untar(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestTargzMore(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if err := Targz(name); err == nil {
+		t.Error()
+	}
+}
+
+func TestUntargzMore(t *testing.T) {
+	dir := "dir"
+	name := dir + "/" + "file"
+	if _, _, err := Untargz(name); err == nil {
+		t.Error()
 	}
 }
