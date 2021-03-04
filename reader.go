@@ -66,10 +66,10 @@ func (t *Reader) Untar(dir ...string) (files, dirs []string, err error) {
 	for {
 		path, isDir, err = t.NextFile(dir...)
 		if err != nil {
-			if err != io.EOF {
-				return
+			if err == io.EOF {
+				err = nil
 			}
-			return files, dirs, nil
+			return files, dirs, err
 		}
 		if len(path) > 0 {
 			if isDir {
