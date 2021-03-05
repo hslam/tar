@@ -95,21 +95,21 @@ func (t *Reader) NextFile(dir ...string) (name string, isDir bool, err error) {
 	}
 	path := filepath.Join(dirpath, header.Name)
 	filedir, _ := filepath.Split(path)
-	if err := checkDir(filedir); err != nil {
-		return "", false, err
-	}
-	if header.FileInfo().IsDir() {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return path, true, os.Mkdir(path, 0744)
+	if err = checkDir(filedir); err == nil {
+		if header.FileInfo().IsDir() {
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				return path, true, os.Mkdir(path, 0744)
+			}
+			return path, true, nil
 		}
-		return path, true, nil
+		var f *os.File
+		f, err = os.Create(path)
+		if err == nil {
+			_, err = io.Copy(f, t)
+			f.Sync()
+			f.Close()
+		}
 	}
-	f, err := os.Create(path)
-	if err != nil {
-		return "", false, err
-	}
-	defer f.Close()
-	_, err = io.Copy(f, t)
 	return path, false, err
 }
 
