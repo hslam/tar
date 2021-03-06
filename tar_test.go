@@ -96,7 +96,10 @@ func TestReadWriter(t *testing.T) {
 		t.Error(err)
 	}
 	tr := NewReader(r)
-	tr.NextFile()
+	if _, _, err := tr.NextFile("", ""); err == nil {
+		t.Error()
+	}
+	tr.NextFile("")
 	tr.Close()
 	r.Close()
 
