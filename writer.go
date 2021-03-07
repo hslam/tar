@@ -68,38 +68,40 @@ func (w *Writer) Flush() error {
 // Tar tars all the paths to the tar file.
 func (w *Writer) Tar(paths ...string) error {
 	for _, name := range paths {
-		info, err := os.Stat(name)
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			if err := w.TarDir(name); err != nil {
-				return err
-			}
-			continue
-		}
-		if err := w.tarFile(name, "", info); err != nil {
+		if err := w.tarPath(name); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+func (w *Writer) tarPath(name string) error {
+	info, err := os.Stat(name)
+	if err == nil {
+		if info.IsDir() {
+			err = w.TarDir(name)
+		} else {
+			err = w.tarFile(name, "", info)
+		}
+	}
+	return err
+}
+
 // TarDir tars a dir to the tar file.
 func (w *Writer) TarDir(dir string) error {
 	var base = filepath.Base(dir)
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+		if err == nil {
+			var rel string
+			rel, err = filepath.Rel(dir, path)
+			if err == nil {
+				if info.IsDir() {
+					return w.tarDir(path, filepath.Join(base, rel), info)
+				}
+				err = w.tarFile(path, filepath.Join(base, rel), info)
+			}
 		}
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return w.tarDir(path, filepath.Join(base, rel), info)
-		}
-		return w.tarFile(path, filepath.Join(base, rel), info)
+		return err
 	})
 }
 
@@ -112,34 +114,35 @@ func (w *Writer) TarFile(name string) error {
 	return w.tarFile(name, "", info)
 }
 
-func (w *Writer) tarDir(path, name string, info os.FileInfo) error {
-	hdr, err := tar.FileInfoHeader(info, "")
-	if err != nil {
-		return err
+func (w *Writer) tarDir(path, name string, info os.FileInfo) (err error) {
+	var hdr *tar.Header
+	hdr, err = tar.FileInfoHeader(info, "")
+	if err == nil {
+		if len(name) > 0 {
+			hdr.Name = name
+		}
+		err = w.WriteHeader(hdr)
 	}
-	if len(name) > 0 {
-		hdr.Name = name
-	}
-	return w.WriteHeader(hdr)
+	return err
 }
 
-func (w *Writer) tarFile(path, name string, info os.FileInfo) error {
-	hdr, err := tar.FileInfoHeader(info, "")
-	if err != nil {
-		return err
+func (w *Writer) tarFile(path, name string, info os.FileInfo) (err error) {
+	var hdr *tar.Header
+	hdr, err = tar.FileInfoHeader(info, "")
+	if err == nil {
+		if len(name) > 0 {
+			hdr.Name = name
+		}
+		err = w.WriteHeader(hdr)
+		if err == nil {
+			var f *os.File
+			f, err = os.Open(path)
+			if err == nil {
+				_, err = io.Copy(w, f)
+				f.Close()
+			}
+		}
 	}
-	if len(name) > 0 {
-		hdr.Name = name
-	}
-	err = w.WriteHeader(hdr)
-	if err != nil {
-		return err
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(w, f)
 	return err
 }
 
